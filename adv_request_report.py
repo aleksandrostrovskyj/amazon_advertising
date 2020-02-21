@@ -29,7 +29,7 @@ async def sp_targets(amz: type(Reports), pool, report_date: date):
 async def main(period: int):
     amz = Reports()
     pool = await redis_pool()
-    date_list = [datetime.today()-timedelta(days=i) for i in range(period+1, 0, -1)]
+    date_list = [datetime.today()-timedelta(days=i) for i in range(period, 0, -1)]
     tasks = []
     for report_date in date_list:
         tasks.append(asyncio.create_task(sp_targets(amz, pool, report_date)))
@@ -39,4 +39,4 @@ async def main(period: int):
     await pool.wait_closed()
 
 if __name__ == '__main__':
-    asyncio.run(main(10))
+    asyncio.run(main(1))
