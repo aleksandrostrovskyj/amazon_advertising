@@ -150,8 +150,7 @@ class Reports(AmazonAdvertise):
         :param body: body params. Must contains metrics and reportDate
         :return: aiohttp.ClientResponse
         """
-        logging.info('Request report.')
-        return await self.make_request(session=session, method='POST', api_url=api_url, body=body)
+        return await self.make_request(session=session, method='POST', api_url=api_url, data=body)
 
     async def status(self, *, session=None, report_id=''):
         """
@@ -162,7 +161,6 @@ class Reports(AmazonAdvertise):
         :return: aiohttp.ClientResponse
         """
         api_url = f'/v2/reports/{report_id}'
-        logging.info('Check report status.')
         return await self.make_request(session=session, method='GET', api_url=api_url)
 
     async def download(self, *, session=None, report_id=''):
@@ -174,5 +172,4 @@ class Reports(AmazonAdvertise):
         :return: aiohttp.ClientResponse
         """
         api_url = f'/v2/reports/{report_id}/download'
-        logging.info('Download report.')
         return await self.make_request(session=session, method='GET', api_url=api_url)
