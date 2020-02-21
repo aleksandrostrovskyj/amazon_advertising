@@ -6,7 +6,6 @@ import requests
 from pathlib import Path
 from settings import config
 
-
 BASE_DIR = Path(__file__).parent
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
@@ -73,6 +72,7 @@ class AmazonAdvertise:
     def request_token(cls):
         """
         API method to get token from Amazon Advertise API using refresh token
+
         :return: response object that should be processed via save_token static method
         """
         url = 'https://api.amazon.com/auth/o2/token'
@@ -95,6 +95,7 @@ class AmazonAdvertise:
     def save_token(response) -> bool:
         """
         Method to save token to the local .pickle file
+
         :param response: response with token data that received via request_token method
         :return: token_data, dict
         """
@@ -110,7 +111,6 @@ class AmazonAdvertise:
     def sign_request(func):
         """
         Decorator to sign request with token and needed headers
-        :return:
         """
         async def sign(self, *args, **kwargs):
             logging.info('Try to sign request with auth token.')
@@ -124,15 +124,55 @@ class AmazonAdvertise:
         return sign
 
     @sign_request
-    async def make_request(self, *, session=None, method='', api_url='', body=None, **kwargs):
+    async def make_request(self, *, session=None, api_url='', **kwargs):
         """
         Async method to make request to Amazon Advertising API endpoint
-        :param session: aiohttp.ClientSession()
-        :param method: request method
-        :param api_url: Amazon Advertising API endpoint url
-        :param body:
-        :param kwargs:
-        :return:
-        """
-        return await session.request(method=method, url=self.main_url.format(api_url), data=body, **kwargs)
 
+        :param session: aiohttp.ClientSession()
+        :param api_url: Amazon Advertising API endpoint url
+        :param kwargs: any additional keywords params
+        :return: aiohttp.ClientResponse
+        """
+        return await session.request(url=self.main_url.format(api_url), **kwargs)
+
+
+class Reports(AmazonAdvertise):
+    """
+    Class to work with Reports endpoint
+    """
+
+    async def request(self, *, session=None, api_url='', body=None):
+        """
+        Request new report creation
+
+        :param session: aiohttp.ClientSession()
+        :param api_url: endpoint url
+        :param body: body params. Must contains metrics and reportDate
+        :return: aiohttp.ClientResponse
+        """
+        logging.info('Request report.')
+        return await self.make_request(session=session, method='POST', api_url=api_url, body=body)
+
+    async def status(self, *, session=None, report_id=''):
+        """
+        Check status of requested report
+
+        :param session: aiohttp.ClientSession()
+        :param report_id: report id, has been return in response by Reports.request() method
+        :return: aiohttp.ClientResponse
+        """
+        api_url = f'/v2/reports/{report_id}'
+        logging.info('Check report status.')
+        return await self.make_request(session=session, method='GET', api_url=api_url)
+
+    async def download(self, *, session=None, report_id=''):
+        """
+        Download report by report id. Should be used only for report with "SUCCESS" status
+
+        :param session: aiohttp.ClientSession()
+        :param report_id: report id, has been return in response by Reports.request() method
+        :return: aiohttp.ClientResponse
+        """
+        api_url = f'/v2/reports/{report_id}/download'
+        logging.info('Download report.')
+        return await self.make_request(session=session, method='GET', api_url=api_url)
